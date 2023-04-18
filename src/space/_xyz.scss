@@ -1,0 +1,8 @@
+@use "sass:math";
+
+$D65X: math.div(0.3127, 0.329);
+$D65Y: 1;
+$D65Z: math.div(1 - 0.3127 - 0.329, 0.329);
+
+$kappa: math.div(math.pow(29, 3), math.pow(3, 3));
+$epsilon: math.div(math.pow(6, 3), math.pow(29, 3));

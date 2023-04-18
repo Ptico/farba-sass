@@ -1,0 +1,62 @@
+@use "sass:math";
+@use "../algebra" as alg;
+
+$SRGBtoXYZ: (
+  (0.41239079926595934, 0.357584339383878,   0.1804807884018343),
+  (0.21263900587151027, 0.715168678767756,   0.07219231536073371),
+  (0.01933081871559182, 0.11919477979462598, 0.9505321522496607)
+);
+
+$XYZtoSRGB: (
+  ( 3.2409699419045226, -1.537383177570094,  -0.4986107602930034),
+  (-0.9692436362808796,  1.8759675015077202,  0.04155505740717559),
+  (0.05563007969699366, -0.20397695888897652, 1.0569715142428786)
+);
+
+@function from-xyz($xyz) {
+  $rgbl: alg.vm-dot($xyz, $XYZtoSRGB);
+
+  $rl: nth($rgbl, 1);
+  $gl: nth($rgbl, 2);
+  $bl: nth($rgbl, 3);
+
+  // TODO - gamut clipping
+  @return (
+    math.round(from-linear($rl) * 255)
+    math.round(from-linear($gl) * 255)
+    math.round(from-linear($bl) * 255)
+  );
+}
+
+@function to-xyz($rgb) {
+  $r: math.div(nth($rgb, 1), 255);
+  $g: math.div(nth($rgb, 2), 255);
+  $b: math.div(nth($rgb, 3), 255);
+
+  $rgbl: (to-linear($r), to-linear($g), to-linear($b));
+
+  $xyz: alg.vm-dot($rgbl, $SRGBtoXYZ);
+
+  @return (
+    nth($xyz, 1)
+    nth($xyz, 2)
+    nth($xyz, 3)
+  );
+}
+
+@function from-linear($c) {
+  @return if(
+    $c <= 0.0031308,
+    12.92 * $c,
+    1.055 * math.pow($c, math.div(1, 2.4)) - 0.055
+  );
+}
+
+@function to-linear($c) {
+  $a: 0.055;
+  @if $c > 0.04045 {
+    @return math.pow(math.div($c + $a, 1 + $a), 2.4);
+  } @else {
+    @return math.div($c, 12.92);
+  }
+}

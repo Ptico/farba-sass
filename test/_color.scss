@@ -1,0 +1,75 @@
+@use "sass:list";
+
+@use "../node_modules/sass-true" as *;
+@use "../src/color" as farba;
+
+@include describe("color API") {
+  @include it("creates a color") {
+    @include assert-equal(
+      farba.color("hsluv", 216deg, 50%, 80%, 50%),
+      (
+        "color": "hsluv",
+        "values": 216deg 50% 80%,
+        "alpha": 50%
+      )
+    );
+  }
+
+  @include it("default opacity is 100%") {
+    @include assert-equal(
+      map-get(farba.color("hsluv", 216deg, 50%, 80%), "alpha"),
+      100%
+    );
+  }
+
+  @include it("converts values") {
+    @include assert-equal(
+      farba.color("hsluv", 0.6turn, 0.5, 0.8, 0.5),
+      (
+        "color": "hsluv",
+        "values": 216deg 50% 80%,
+        "alpha": 50%
+      )
+    );
+  }
+
+  @include it("creates a color from SASS color") {
+    @include assert-equal(
+      farba.from(rebeccapurple),
+      (
+        "color": "srgb",
+        "values": 102 51 153,
+        "alpha": 100%
+      )
+    );
+  }
+
+  @include it("convert color to other color") {
+    $color: farba.color("okhsv-srgb", 150deg, 50%, 50%);
+    $newColor: farba.to("hsluv", $color);
+    $values: map-get($newColor, "values");
+
+    @include assert-equal(map-get($newColor, "color"), "hsluv");
+    @include assert-equal(round(nth($values, 1)), 135deg);
+    @include assert-equal(round(nth($values, 2)), 59%);
+    @include assert-equal(round(nth($values, 3)), 46%);
+  }
+
+  @include it("represent color as CSS Color 4 when available") {
+    $color: farba.color("okhsl-srgb", 320deg, 100%, 59%, 50%);
+
+    @include assert-equal(
+      farba.to-css($color),
+      oklab(list.slash((0.6469389611 0.2378188063 -0.1995536726), 50%))
+    )
+  }
+
+  @include it("represent color as sRGB color when native function unavailable") {
+    $color: farba.color("hsluv", 0deg, 100%, 50%, 70%);
+
+    @include assert-equal(
+      farba.to-css($color),
+      rgb(234 0 100 / 70%)
+    );
+  }
+}

@@ -1,0 +1,27 @@
+@use "../../node_modules/sass-true" as *;
+
+@use "../../src/color/okhsv-srgb" as okhsv;
+
+@include describe("color okhsv-srgb") {
+  $okhsv: (29.2338797578deg 0.9999999878 0.9999999992); // RGB 255 0 0
+  $oklab: (0.6279553658 0.2248630674 0.1258462741);
+  $xyz:   (0.4123907992 0.2126390058 0.0193308187);
+
+  @include it("converts to oklab") {
+    @include assert-equal(okhsv.to-oklab($okhsv), $oklab, $inspect: true);
+  }
+
+  @include it("converts to xyz") {
+    @include assert-equal(okhsv.to-xyz($okhsv), $xyz, $inspect: true);
+  }
+
+  @include it("converts from oklab") {
+    $oklab: okhsv.to-oklab($okhsv);
+    @include assert-equal(okhsv.from-oklab($oklab), $okhsv);
+  }
+
+  @include it("converts from xyz") {
+    $xyz: okhsv.to-xyz($okhsv);
+    @include assert-equal(okhsv.from-xyz($xyz), $okhsv);
+  }
+}

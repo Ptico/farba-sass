@@ -1,0 +1,126 @@
+@use "sass:math";
+@use "../../algebra" as alg;
+
+@use "../../space/oklab" as oklab;
+@use "../../space/lms" as lms;
+
+@function to-xyz($hsv) {
+  $oklab: to-oklab($hsv);
+  $lms: oklab.to-lms($oklab);
+
+  @return lms.to-xyz($lms);
+}
+
+@function from-xyz($xyz) {
+  $lms: lms.from-xyz($xyz);
+  $oklab: oklab.from-lms($lms);
+
+  @return from-oklab($oklab);
+}
+
+$S0: 0.5;
+
+@function to-oklab($hsv) {
+  $h: nth($hsv, 1);
+  $s: nth($hsv, 2);
+  $v: nth($hsv, 3);
+
+  $L: toe-inv($v);
+
+  @if ($L == 0 or $s == 0) {
+    @return ($L 0 0);
+  }
+
+  $a_: math.cos($h);
+  $b_: math.sin($h);
+
+  $cusp: find-cusp($a_, $b_);
+
+  $STmax: to-st($cusp);
+  $Smax: nth($STmax, 1);
+  $Tmax: nth($STmax, 2);
+  $k: 1 - math.div($S0, $Smax);
+
+  // first we compute L and V as if the gamut is a perfect triangle:
+  $Lv:     1 - math.div($s * $S0, $S0 + $Tmax - $Tmax * $k * $s);
+  $Cv: math.div($s * $Tmax * $S0, $S0 + $Tmax - $Tmax * $k * $s);
+
+  $L: $v * $Lv;
+  $C: $v * $Cv;
+
+  // then we compensate for both toe and the curved top part of the triangle:
+  $Lvt: toe-inv($Lv);
+  $Cvt: math.div($Cv * $Lvt, $Lv);
+
+  $Lnew: toe-inv($L);
+  $C: math.div($C * $Lnew, $L);
+  $L: $Lnew;
+
+  $rgbs: oklab-to-linear-rgb($Lvt, $a_ * $Cvt, $b_ * $Cvt);
+  $scaleL: alg.cbrt(
+    math.div(1.0,
+      max(
+        max(nth($rgbs, 1), nth($rgbs, 2)),
+        max(nth($rgbs, 3), 0.0)
+      )
+    )
+  );
+
+  $L: $L * $scaleL;
+  $C: $C * $scaleL;
+
+  $a: $C * $a_;
+  $b: $C * $b_;
+
+  @return ($L $a $b);
+}
+
+@function from-oklab($Lab) {
+  $L: nth($Lab, 1);
+  $a: nth($Lab, 2);
+  $b: nth($Lab, 3);
+
+  $C: math.sqrt($a * $a + $b * $b);
+  $h: math.atan2($b, $a);
+
+  @if ($L == 0 or $L == 1 or $C == 0) {
+    @return ($h 0 toe($L));
+  }
+
+  $a_: math.div($a, $C);
+  $b_: math.div($b, $C);
+
+  $cusp: find-cusp($a_, $b_);
+  $STmax: to-st($cusp);
+  $Smax: nth($STmax, 1);
+  $Tmax: nth($STmax, 2);
+  $k: 1 - math.div($S0, $Smax);
+
+  $t: math.div($Tmax, $C + $L * $Tmax);
+  $Lv: $t * $L;
+  $Cv: $t * $C;
+
+  $Lvt: toe-inv($Lv);
+  $Cvt: math.div($Cv * $Lvt, $Lv);
+
+  $rgbs: oklab-to-linear-rgb($Lvt, $a_ * $Cvt, $b_ * $Cvt);
+  $scaleL: alg.cbrt(
+    math.div(1.0,
+      max(
+        max(nth($rgbs, 1), nth($rgbs, 2)),
+        max(nth($rgbs, 3), 0.0)
+      )
+    )
+  );
+
+  $L: math.div($L, $scaleL);
+  $C: math.div($C, $scaleL);
+
+  $C: math.div($C * toe($L), $L);
+  $L: toe($L);
+
+  $s: math.div(($S0 + $Tmax) * $Cv, ($Tmax * $S0) + $Tmax * $k * $Cv);
+  $v: math.div($L, $Lv);
+
+  @return ($h $s $v);
+}

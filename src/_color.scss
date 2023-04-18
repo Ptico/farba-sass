@@ -1,0 +1,81 @@
+@use "sass:meta";
+@use "sass:list";
+
+@use "color/okhsl-srgb" as okhsl-srgb;
+@use "color/okhsv-srgb" as okhsv-srgb;
+@use "color/okhsl-p3" as okhsl-p3;
+@use "color/okhsv-p3" as okhsv-p3;
+@use "color/hsluv" as hsluv;
+@use "color/hpluv" as hpluv;
+@use "color/srgb" as srgb;
+
+@use "args" as args;
+
+// Return the internal color representation
+@function color($name, $values...) {
+  $definition: map-get(meta.module-variables($name), "DEFINITION");
+
+  @return args.normalize($values, $definition);
+}
+
+// Create farba color from builtin sass color
+// alias: from-srgb
+@function from($color) {
+  @return color("srgb", red($color), green($color), blue($color), alpha($color));
+}
+@function from-srgb($color) { @return from($color); }
+
+// Convert farba color to other farba color
+@function to($name, $color) {
+  $currentName: map-get($color, "color");
+
+  @if ($name == $currentName) { @return $color; }
+
+  $values: map-get($color, "values");
+  $alpha: map-get($color, "alpha");
+
+  $xyz: _module-call($currentName, "to-xyz", $values);
+  $newValues: _module-call($name, "from-xyz", $xyz);
+
+  @return (
+    "color": $name,
+    "values": $newValues,
+    "alpha": $alpha
+  );
+}
+
+@function to-css($color) {
+  $name: map-get($color, "color");
+
+  $funcs: meta.module-functions($name);
+  $native: map-get($funcs, "to-css");
+
+  @if $native {
+    $values: map-get($color, "values");
+    $alpha: map-get($color, "alpha");
+
+    @return meta.call($native, $values, $alpha);
+  } @else {
+    @return to-srgb($color);
+  }
+}
+
+@function to-srgb($color) {
+  $alpha: map-get($color, "alpha");
+  $rgb: to("srgb", $color);
+
+  $values: map-get($rgb, "values");
+
+  @if $alpha < 100% {
+    $values: list.slash($values, $alpha);
+  }
+
+  @return rgb($values);
+}
+
+@function _module-call($namespace, $func, $values) {
+  @return meta.call(
+    map-get(meta.module-functions($namespace), $func),
+    $values
+  );
+}

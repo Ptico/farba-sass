@@ -1,0 +1,20 @@
+@use "sass:color";
+
+@use "../space/srgb" as srgb;
+
+$DEFINITION: (
+  "color": "srgb",
+  "args": (
+    ("range", (0, 255)),
+    ("range", (0, 255)),
+    ("range", (0, 255))
+  )
+);
+
+@function to-xyz($rgb) {
+  @return srgb.to-xyz($rgb);
+}
+
+@function from-xyz($xyz) {
+  @return srgb.from-xyz($xyz);
+}

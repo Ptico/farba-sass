@@ -1,0 +1,86 @@
+@use "sass:math";
+@use "hsluv" as hsluv;
+@use "../args" as args;
+@use "../space/lch" as lch;
+@use "../space/luv" as luv;
+
+$DEFINITION: (
+  "color": "hpluv",
+  "args": (
+    ("degree",  (    )),
+    ("percent", (0, 1)),
+    ("percent", (0, 1))
+  )
+);
+
+@function to-xyz($hpluv) {
+  $lch: to-lch($hpluv);
+  $luv: lch.to-lab($lch);
+
+  @return luv.to-xyz($luv);
+}
+
+@function from-xyz($xyz) {
+  $luv: luv.from-xyz($xyz);
+  $lch: lch.from-lab($luv);
+
+  @return from-lch($lch);
+}
+
+@function to-lch($hpluv) {
+  $h: nth($hpluv, 1);
+  $s: args.to-unitless(nth($hpluv, 2));
+  $l: args.to-unitless(nth($hpluv, 3));
+
+  $c: 0;
+  // white and black: disambiguate chroma
+  @if not($l > 99.9999999 or $l < 0.00000001) {
+    $max: max-safe-chroma-for-l($l);
+    $c: math.div($max, 100) * $s;
+  }
+  @return ($l $c $h);
+}
+
+@function from-lch($lch) {
+  $l: nth($lch, 1);
+  $c: nth($lch, 2);
+  $h: nth($lch, 3);
+
+  $s: 0;
+  // white and black: disambiguate saturation
+  @if not($l > 99.9999999 or $l < 0.00000001) {
+    $max: max-safe-chroma-for-l($l);
+    $s: math.div($c, $max) * 100;
+  }
+  @return ($h $s*1% $l*1%);
+}
+
+// For given lightness, returns the maximum chroma. Keeping the chroma value
+// below this number will ensure that for any hue, the color is within the RGB
+// gamut.
+// @param {number[][2]} $l
+// @return {number}
+@function max-safe-chroma-for-l($l) {
+  $lengths: ();
+
+  @each $point in hsluv.get-bounds($l) {
+    $m1: nth($point, 1);
+    $b1: nth($point, 2);
+    // x where line intersects with perpendicular running though (0, 0)
+    $x: intersect-line-line(($m1, $b1), (math.div(-1, $m1), 0));
+    $lengths: append($lengths, distance-from-pole(($x, $b1 + $x * $m1)));
+  }
+
+  @return min($lengths...);
+}
+
+@function intersect-line-line($line1, $line2) {
+  @return math.div(
+    nth($line1, 2) - nth($line2, 2),
+    nth($line2, 1) - nth($line1, 1)
+  );
+}
+
+@function distance-from-pole($point) {
+  @return math.sqrt(math.pow(nth($point, 1), 2) + math.pow(nth($point, 2), 2));
+}

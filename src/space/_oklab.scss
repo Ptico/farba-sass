@@ -1,0 +1,41 @@
+@use "sass:math";
+@use "../algebra" as alg;
+
+// https://github.com/w3c/csswg-drafts/issues/6642#issuecomment-1490068959
+$LMStoOKLab: (
+  (0.21045426824930336,   0.7936177747759865, -0.00407204302528986),
+  (1.977998539071675,    -2.4285922502018127,  0.4505937111301374),
+  (0.025904030547901084,  0.7827717270900503, -0.8086757576379514)
+);
+
+$OKLabtoLMS: (
+  (1.0,  0.3963377773761749,   0.21580375730991364),
+  (1.0, -0.10556134581565857, -0.0638541728258133),
+  (1.0, -0.08948418498039246, -1.2914855480194092)
+);
+
+@function from-lms($lms) {
+  $lmsc: (
+    alg.cbrt(nth($lms, 1)),
+    alg.cbrt(nth($lms, 2)),
+    alg.cbrt(nth($lms, 3))
+  );
+
+  $Lab: alg.vm-dot($lmsc, $LMStoOKLab);
+
+  @return (
+    nth($Lab, 1)
+    nth($Lab, 2)
+    nth($Lab, 3)
+  );
+}
+
+@function to-lms($Lab) {
+  $lms3: alg.vm-dot($Lab, $OKLabtoLMS);
+
+  @return (
+    math.pow(nth($lms3, 1), 3)
+    math.pow(nth($lms3, 2), 3)
+    math.pow(nth($lms3, 3), 3)
+  );
+}

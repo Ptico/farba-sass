@@ -1,0 +1,13 @@
+@import "ok/const-srgb";
+@import "ok/intersection";
+@import "ok/common";
+@import "ok/hsv";
+
+$DEFINITION: (
+  "color": "okhsv-srgb",
+  "args": (
+    ("degree", (    )),
+    ("range",  (0, 1)),
+    ("range",  (0, 1))
+  )
+);

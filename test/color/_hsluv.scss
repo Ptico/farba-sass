@@ -1,0 +1,34 @@
+@use "../../node_modules/sass-true" as *;
+
+@use "../../src/color/hsluv" as hsluv;
+
+@include describe("color hsluv") {
+  @include it("converts to LChuv") {
+    @include assert-equal(
+      hsluv.to-lch(176.10101145694136deg 91.47367563461407 68.85616807993264),
+      (68.85616807993264 50.566196645106075 176.10101145694136deg)
+    );
+  }
+
+  @include it("converts to XYZ D65") {
+    @include assert-equal(
+      hsluv.to-xyz(176.10101145694136deg 91.47367563461407 68.85616807993264),
+      (0.2638968245267012 0.39144998481667814 0.44196456538060225)
+    );
+  }
+
+  @include it("converts from LChuv") {
+    @include assert-equal(
+      hsluv.from-lch(68.85616807993264 50.566196645106075 176.10101145694136deg),
+      (176.10101145694136deg 91.47367563461407% 68.85616807993264%)
+    );
+  }
+
+  @include it("converts from XYZ D65") {
+    @include assert-equal(
+      hsluv.from-xyz(0.2638968245267012 0.39144998481667814 0.44196456538060225),
+      (176.10101145694136deg 91.47367563461407% 68.85616807993264%),
+      $inspect: true // Hack
+    );
+  }
+}

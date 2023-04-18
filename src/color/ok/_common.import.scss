@@ -1,0 +1,22 @@
+@use "sass:math";
+
+$K1: 0.206;
+$K2: 0.03;
+$K3: math.div(1 + $K1, 1 + $K2);
+
+@function toe($x) {
+  @return 0.5 * ($K3 * $x - $K1 + math.sqrt(
+    math.pow($K3 * $x - $K1, 2) + 4 * $K2 * $K3 * $x
+  ));
+}
+
+@function toe-inv($x) {
+  @return math.div($x * $x + $K1 * $x, $K3 * ($x + $K2));
+}
+
+@function to-st($cusp) {
+  $l: nth($cusp, 1);
+  $c: nth($cusp, 2);
+
+  @return (math.div($c, $l), math.div($c, 1 - $l));
+}

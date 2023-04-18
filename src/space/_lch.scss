@@ -1,0 +1,42 @@
+@use "sass:math";
+
+// LCh D65
+// L (%) 0..100
+// C (range) 0..133.807
+// h (deg) 0..360
+
+// LCh D50
+// L (%) 0..100
+// C (range) 0..150
+// h (deg) 0..360
+
+// LChuv
+// L (%) 0..100
+// C (range) 0..176.956
+// h (deg) 0..360
+
+// Lab to LCh
+// Luv to LChuv
+@function from-lab($Lab) {
+  $L: nth($Lab, 1);
+  $a: nth($Lab, 2);
+  $b: nth($Lab, 3);
+
+  $C: math.sqrt($a * $a + $b * $b);
+  $h: math.atan2($b, $a);
+
+  @return ($L $C $h);
+}
+
+// LCh to Lab
+// LChuv to Luv
+@function to-lab($LCh) {
+  $L: nth($LCh, 1);
+  $C: nth($LCh, 2);
+  $h: nth($LCh, 3);
+
+  $a: $C * math.cos($h);
+  $b: $C * math.sin($h);
+
+  @return ($L $a $b);
+}

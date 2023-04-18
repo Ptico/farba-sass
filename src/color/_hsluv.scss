@@ -1,0 +1,132 @@
+@use "sass:math";
+@use "../args" as args;
+@use "../space/xyz" as xyz;
+@use "../space/lch" as lch;
+@use "../space/luv" as luv;
+@use "../space/srgb" as srgb;
+
+$DEFINITION: (
+  "color": "hsluv",
+  "args": (
+    ("degree",  (    )),
+    ("percent", (0, 1)),
+    ("percent", (0, 1))
+  )
+);
+
+@function to-xyz($hsluv) {
+  $lch: to-lch($hsluv);
+  $luv: lch.to-lab($lch);
+
+  @return luv.to-xyz($luv);
+}
+
+@function from-xyz($xyz) {
+  $luv: luv.from-xyz($xyz);
+  $lch: lch.from-lab($luv);
+
+  @return from-lch($lch);
+}
+
+@function to-lch($hsluv) {
+  $h: nth($hsluv, 1);
+  $s: args.to-unitless(nth($hsluv, 2));
+  $l: args.to-unitless(nth($hsluv, 3));
+
+  $c: 0;
+  // white and black: disambiguate chroma
+  @if not($l > 99.9999999 or $l < 0.00000001) {
+    $max: max-chroma-for-l-h($l, $h);
+    $c: math.div($max, 100) * $s;
+  }
+
+  @return ($l $c $h);
+}
+
+@function from-lch($lch) {
+  $l: nth($lch, 1);
+  $c: nth($lch, 2);
+  $h: nth($lch, 3);
+
+  $s: 0;
+  // white and black: disambiguate saturation
+  @if not($l > 99.9999999 or $l < 0.00000001) {
+    $max: max-chroma-for-l-h($l, $h);
+    $s: math.div($c, $max) * 100;
+  }
+
+  @return ($h $s*1% $l*1%);
+}
+
+// For a given lightness and hue, return the maximum chroma that fits in
+// the RGB gamut.
+// @param {number[][2]} $l
+// @param {number} $h
+// @return {number}
+@function max-chroma-for-l-h($l, $h) {
+  $lengths: ();
+
+  @each $line in get-bounds($l) {
+    $l: length-of-ray-until-intersect($h, $line);
+    @if $l != null {
+      $lengths: append($lengths, $l);
+    }
+  }
+
+  @return min($lengths...);
+}
+
+// For a given lightness, return a list of 6 lines in slope-intercept
+// form that represent the bounds in CIELUV, stepping over which will
+// push a value out of the RGB gamut
+// @param {number} $l
+// @return {number[][2]}
+@function get-bounds($l) {
+  $sub1: math.div(math.pow($l + 16, 3), 1560896);
+  $sub2: if($sub1 > xyz.$epsilon, $sub1, math.div($l, xyz.$kappa));
+  $ret: ();
+  @for $i from 1 through 3 {
+    $m_: nth(srgb.$XYZtoSRGB, $i);
+    $m1: nth($m_, 1);
+    $m2: nth($m_, 2);
+    $m3: nth($m_, 3);
+    @for $t from 0 through 1 {
+      $top1: (284517 * $m1 - 94839 * $m3) * $sub2;
+      $top2: (838422 * $m3 + 769860 * $m2 + 731718 * $m1) *
+        $l *
+        $sub2 -
+        769860 *
+        $t *
+        $l;
+      $bottom: (632260 * $m3 - 126452 * $m2) * $sub2 + 126452 * $t;
+
+      $ret: append($ret, (math.div($top1, $bottom), math.div($top2, $bottom)));
+    }
+  }
+
+  @return $ret;
+}
+
+@function length-of-ray-until-intersect($theta, $line) {
+  // theta  -- angle of ray starting at (0, 0)
+  // m, b   -- slope and intercept of line
+  // x1, y1 -- coordinates of intersection
+  // len    -- length of ray until it intersects with line
+  //
+  // b + m * x1        = y1
+  // len              >= 0
+  // len * cos(theta)  = x1
+  // len * sin(theta)  = y1
+  //
+  //
+  // b + m * (len * cos(theta)) = len * sin(theta)
+  // b = len * sin(hrad) - m * len * cos(theta)
+  // b = len * (sin(hrad) - m * cos(hrad))
+  // len = b / (sin(hrad) - m * cos(hrad))
+
+  $m1: nth($line, 1);
+  $b1: nth($line, 2);
+  $len: math.div($b1, math.sin($theta) - $m1 * math.cos($theta));
+
+  @return if($len < 0, null, $len);
+}

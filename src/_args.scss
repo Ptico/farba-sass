@@ -1,0 +1,86 @@
+@use "sass:math";
+@use "sass:meta";
+
+@function normalize($args, $definition) {
+  $alpha: 100%;
+
+  @if length($args) < 3 {
+    $args: nth($args, 1);
+
+    @if length($args) == 2 { // List + alpha
+      $alpha: nth($args, 2);
+    }
+  }
+
+  @if length($args) == 4 {
+    $alpha: nth($args, 4);
+
+    $args: (
+      nth($args, 1), nth($args, 2), nth($args, 3)
+    );
+  }
+
+  @if unitless($alpha) {
+    $alpha: to-percent($alpha, 0, 1);
+  }
+
+  $values: ();
+  $ops: map-get($definition, "args");
+  @for $i from 1 through 3 {
+    $v: nth($args, $i);
+    $def: nth($ops, $i);
+
+    $func: "to-#{nth($def, 1)}";
+
+    $n: meta.call(meta.get-function($func), $v, nth($def, 2)...);
+    $values: append($values, $n);
+  }
+
+  @return (
+    "color": map-get($definition, "color"),
+    "values": $values,
+    "alpha": $alpha
+  );
+}
+
+// Convert unit to degree
+// Interpret unitless value as a degree
+$degMult: (
+  "turn": 360,
+  "rad": math.div(180, math.$pi),
+  "grad": math.div(180, 200)
+);
+@function to-degree($v) {
+  $mult: map-get($degMult, unit($v));
+
+  @if $mult {
+    $v: to-unitless($v);
+    $v: $v * $mult;
+  }
+
+  @if unitless($v) {
+    $v: $v * 1deg;
+  }
+
+  @return $v;
+}
+
+@function to-range($v, $min, $max) {
+  @if unitless($v) { @return $v }
+
+  $step: math.div($min - $max, 100) * -1;
+  $res: $min + $v * $step;
+  @return math.div($res, 1%);
+}
+
+@function to-percent($v, $min, $max) {
+  @if unit($v) == "%" { @return $v }
+
+  $step: math.div($min - $max, 100) * -1;
+  $res: math.div($v - $min, $step);
+  @return $res * 1%;
+}
+
+@function to-unitless($v) {
+  @return math.div($v, $v * 0 + 1);
+}

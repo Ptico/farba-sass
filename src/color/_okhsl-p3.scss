@@ -1,0 +1,13 @@
+@import "ok/const-p3";
+@import "ok/intersection";
+@import "ok/common";
+@import "ok/hsl";
+
+$DEFINITION: (
+  "color": "okhsl-p3",
+  "args": (
+    ("degree", (    )),
+    ("range",  (0, 1)),
+    ("range",  (0, 1))
+  )
+);

@@ -1,0 +1,33 @@
+{
+  "name": "farba-sass",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.scss",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "sass test/index.scss"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ptico/farba-sass.git"
+  },
+  "keywords": [
+    "sass",
+    "color",
+    "okhsl",
+    "okhsv",
+    "hsluv",
+    "hpluv"
+  ],
+  "author": "Andrii Savchenko",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Ptico/farba-sass/issues"
+  },
+  "homepage": "https://github.com/Ptico/farba-sass#readme",
+  "devDependencies": {
+    "sass-true": "^7.0.0"
+  }
+}

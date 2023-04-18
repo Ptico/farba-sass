@@ -1,0 +1,71 @@
+@use "sass:math";
+@use "../algebra" as alg;
+@use "xyz" as xyz;
+
+@function u-fn($x, $y, $z) {
+  @return math.div(4 * $x, $x + (15 * $y) + (3 * $z));
+}
+
+@function v-fn($x, $y, $z) {
+  @return math.div(9 * $y, $x + (15 * $y) + (3 * $z));
+}
+
+$refU: u-fn(xyz.$D65X, xyz.$D65Y, xyz.$D65Z);
+$refV: v-fn(xyz.$D65X, xyz.$D65Y, xyz.$D65Z);
+
+@function from-xyz($xyz) {
+  $x: nth($xyz, 1);
+  $y: nth($xyz, 2);
+  $z: nth($xyz, 3);
+
+  // black will create a divide-by-zero error
+  @if $y == 0 {
+    @return ("l": 0, "u": 0, "v": 0);
+  }
+
+  $l: y-to-l($y);
+
+  $u_: u-fn($x, $y, $z);
+  $v_: v-fn($x, $y, $z);
+
+  $u: 13 * $l * ($u_ - $refU);
+  $v: 13 * $l * ($v_ - $refV);
+
+  @return ($l $u $v);
+}
+
+@function to-xyz($luv) {
+  $l: nth($luv, 1);
+  $u: nth($luv, 2);
+  $v: nth($luv, 3);
+
+  // black will create a divide-by-zero error
+  @if $l == 0 {
+    @return ("x": 0, "y": 0, "z": 0);
+  }
+
+  $u_: math.div($u, 13 * $l) + $refU;
+  $v_: math.div($v, 13 * $l) + $refV;
+
+  $y: l-to-y($l);
+  $x: 0 - math.div(9 * $y * $u_, ($u_ - 4) * $v_ - $u_ * $v_);
+  $z: math.div(9 * $y - (15 * $v_ * $y) - ($v_ * $x), 3 * $v_);
+
+  @return ($x $y $z);
+}
+
+@function y-to-l($y) {
+  @if $y > xyz.$epsilon {
+    @return 116 * alg.cbrt($y) - 16;
+  } @else {
+    @return $y * xyz.$kappa;
+  }
+}
+
+@function l-to-y($l) {
+  @if $l > 8 {
+    @return math.pow(math.div($l + 16, 116), 3);
+  } @else {
+    @return math.div($l, xyz.$kappa);
+  }
+}

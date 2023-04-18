@@ -1,0 +1,173 @@
+@use "sass:math";
+@use "sass:list";
+
+@use "../../space/oklab" as oklab;
+@use "../../space/lms" as lms;
+
+@function to-xyz($hsl) {
+  $oklab: to-oklab($hsl);
+  $lms: oklab.to-lms($oklab);
+
+  @return lms.to-xyz($lms);
+}
+
+@function from-xyz($xyz) {
+  $lms: lms.from-xyz($xyz);
+  $oklab: oklab.from-lms($lms);
+
+  @return from-oklab($oklab);
+}
+
+@function to-css($hsl, $alpha) {
+  $oklab: to-oklab($hsl);
+
+  @if $alpha < 100% {
+    @return oklab(list.slash($oklab, $alpha));
+  } @else {
+    @return oklab($oklab);
+  }
+}
+
+@function to-oklab($hsl) {
+  $h: nth($hsl, 1);
+  $s: nth($hsl, 2);
+  $l: nth($hsl, 3);
+
+  @if ($l == 1) {
+    // return white
+    @return (1 0 0);
+  }
+
+  @if ($l == 0) {
+    // return black
+    @return (0 0 0);
+  }
+
+  $L: toe-inv($l);
+
+  $a_: math.cos($h);
+  $b_: math.sin($h);
+
+  $Cs: get-cs($L, $a_, $b_);
+  $C0: nth($Cs, 1);
+  $Cmid: nth($Cs, 2);
+  $Cmax: nth($Cs, 3);
+
+  $t: null; $k0: null; $k1: null; $k2: null;
+
+  $mid: 0.8;
+  $midInv: 1.25;
+
+  @if ($s < $mid) {
+    $t: $midInv * $s;
+    $k0: 0;
+    $k1: $mid * $C0;
+    $k2: 1 - math.div($k1, $Cmid);
+  } @else {
+    $t: 5 * ($s - $mid);
+    $k0: $Cmid;
+    $k1: math.div((1 - $mid) * $Cmid * $Cmid * $midInv * $midInv, $C0);
+    $k2: 1 - math.div($k1, $Cmax - $Cmid);
+  }
+
+  $C: $k0 + math.div($t * $k1, 1 - $k2 * $t);
+
+  $a: $C * $a_;
+  $b: $C * $b_;
+
+  @return ($L $a $b);
+}
+
+@function from-oklab($Lab) {
+  $L: nth($Lab, 1);
+  $a: nth($Lab, 2);
+  $b: nth($Lab, 3);
+
+  $C: math.sqrt($a * $a + $b * $b);
+  $a_: math.div($a, $C);
+  $b_: math.div($b, $C);
+
+  $h: math.atan2($b, $a);
+
+  $Cs: get-cs($L, $a_, $b_);
+  $C0: nth($Cs, 1);
+  $Cmid: nth($Cs, 2);
+  $Cmax: nth($Cs, 3);
+
+  $s: null;
+  $mid: 0.8;
+  $midInv: 1.25;
+
+  @if ($C < $Cmid) {
+    $k0: 0;
+    $k1: $mid * $C0;
+    $k2: 1 - math.div($k1, $Cmid);
+
+    $t: math.div($C - $k0, $k1 + $k2 * ($C - $k0));
+
+    $s: $t * $mid;
+  } @else {
+    $k0: $Cmid;
+    $k1: math.div((1 - $mid) * $Cmid * $Cmid * $midInv * $midInv, $C0);
+    $k2: 1 - math.div($k1, $Cmax - $Cmid);
+
+    $t: math.div($C - $k0, $k1 + $k2 * ($C - $k0));
+
+    $s: $mid + (1 - $mid) * $t;
+  }
+
+  $l: toe($L);
+
+  @return ($h $s $l);
+}
+
+@function get-cs($L, $a_, $b_) {
+  $cusp: find-cusp($a_, $b_);
+
+  $Cmax: find-gamut-intersection($a_, $b_, $L, 1, $L, $cusp);
+  $STmax: to-st($cusp);
+
+  // Scale factor to compensate for the curved part of gamut shape
+  $k: math.div($Cmax, math.min($L * nth($STmax, 1), (1 - $L) * nth($STmax, 2)));
+
+  $STmid: get-st-mid($a_, $b_);
+
+  $Smid: nth($STmid, 1);
+  $Tmid: nth($STmid, 2);
+
+  $Cmid: 0.9 * $k * math.sqrt(
+    math.sqrt(
+      math.div(1,
+        math.div(1, math.pow($L * $Smid, 4)) + math.div(1, math.pow((1 - $L) * $Tmid, 4))
+      )
+    )
+  );
+
+  $C0: math.sqrt(
+    math.div(1,
+      math.div(1, math.pow($L * 0.4, 2)) + math.div(1, math.pow((1 - $L) * 0.8, 2))
+    )
+  );
+
+  @return ($C0, $Cmid, $Cmax);
+}
+
+@function get-st-mid($a_, $b_) {
+  $Smid: 0.11516993 + math.div(1, (
+      7.44778970 + 4.15901240 * $b_ +
+      $a_ * (-2.19557347 + 1.75198401  * $b_ +
+      $a_ * (-2.13704948 - 10.02301043 * $b_ +
+      $a_ * (-4.24894561 + 5.38770819  * $b_ + 4.69891013 * $a_)))
+    )
+  );
+
+  $Tmid: 0.11239642 + math.div(1, (
+      1.61320320 - 0.68124379 * $b_ +
+      $a_ * ( 0.40370612 + 0.90148123 * $b_ +
+      $a_ * (-0.27087943 + 0.61223990 * $b_ +
+      $a_ * ( 0.00299215 - 0.45399568 * $b_ - 0.14661872 * $a_)))
+    )
+  );
+
+  @return ($Smid, $Tmid);
+}

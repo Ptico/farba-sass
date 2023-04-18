@@ -1,0 +1,40 @@
+@use "sass:math";
+@use "../algebra" as alg;
+@use "../space/xyz" as xyz;
+
+@function f($v) {
+  @return if($v > xyz.$epsilon, alg.cbrt($v), math.div(xyz.$kappa * $v + 16, 116));
+}
+
+@function t($v) {
+  $v_: math.pow($v, 3);
+  @return if($v_ > xyz.$epsilon, $v_, math.div(116 * $v - 16, xyz.$kappa));
+}
+
+@function from-xyz($xyz) {
+  $x_: f(math.div(nth($xyz, 1), xyz.$D65X));
+  $y_: f(math.div(nth($xyz, 2), xyz.$D65Y));
+  $z_: f(math.div(nth($xyz, 3), xyz.$D65Z));
+
+  $L: 116 * $y_ - 16;
+  $a: 500 * ($x_ - $y_);
+  $b: 200 * ($y_ - $z_);
+
+  @return ($L $a $b);
+}
+
+@function to-xyz($Lab) {
+  $L: nth($Lab, 1);
+  $a: nth($Lab, 2);
+  $b: nth($Lab, 3);
+
+  $y_: math.div($L + 16, 116);
+  $x_: math.div($a, 500 + $y_);
+  $z_: math.div($y_ - $b, 200);
+
+  $x: t($x_) * xyz.$D65X;
+  $y: t($y_) * xyz.$D65Y;
+  $z: t($z_) * xyz.$D65Z;
+
+  @return ($x $y $z);
+}
