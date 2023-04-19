@@ -12,7 +12,7 @@
 @use "args" as args;
 
 // Return the internal color representation
-@function color($name, $values...) {
+@function create($name, $values...) {
   $definition: map-get(meta.module-variables($name), "DEFINITION");
 
   @return args.normalize($values, $definition);
