@@ -30,7 +30,7 @@ $color: farba.to(hsluv, $baseColor);
 
 **Important:**
 
-For some colors (okhsl/okhsv for example), unitless values would be threated as numbers in a defined range (0 to 1 for example), not percents, and angles could be threated as Revolutions, not degrees. So it's highly recommended to use define corresponding units.
+For some colors (okhsl/okhsv for example), unitless values would be threated as numbers in a defined range (0 to 1 for example), not percents, and angles could be threated as revolutions or radians, not degrees. So it's highly recommended to use define corresponding units.
 All the CSS unit types are supported, including [angle](https://developer.mozilla.org/en-US/docs/Web/CSS/angle)
 
 ## Colors
