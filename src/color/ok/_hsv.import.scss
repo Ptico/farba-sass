@@ -18,6 +18,16 @@
   @return from-oklab($oklab);
 }
 
+@function to-css($hsl, $alpha) {
+  $oklab: to-oklab($hsl);
+
+  @if $alpha < 100% {
+    @return oklab(list.slash($oklab, $alpha));
+  } @else {
+    @return oklab($oklab);
+  }
+}
+
 $S0: 0.5;
 
 @function to-oklab($hsv) {

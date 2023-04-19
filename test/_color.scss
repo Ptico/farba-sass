@@ -24,10 +24,10 @@
 
   @include it("converts values") {
     @include assert-equal(
-      farba.create(hsluv 0.6turn 0.5 0.8 0.5),
+      farba.create(okhsl-srgb 0.6turn 50% 80% 0.5),
       (
-        "color": "hsluv",
-        "values": 216deg 50% 80%,
+        "color": "okhsl-srgb",
+        "values": 216deg 0.5 0.8,
         "alpha": 50%
       )
     );
