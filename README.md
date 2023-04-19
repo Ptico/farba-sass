@@ -1,6 +1,10 @@
+[![SWUbanner](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct-single.svg)](https://stand-with-ukraine.pp.ua/)
+
 # farba-sass
 
-Pure SASS color convertion and manipulation
+(ukrainian: фарба - paint)
+
+Pure SASS color convertion and manipulation.
 
 ## Usage
 
@@ -35,7 +39,7 @@ All the CSS unit types are supported, including [angle](https://developer.mozill
 
 ## Colors
 
-* `okhsl-srgb`/`okhsv-srgb` - [Announcement](https://bottosson.github.io/posts/colorpicker/), [Color picker](https://bottosson.github.io/misc/colorpicker/)
+* **okhsl-srgb**/**okhsv-srgb** - [Announcement](https://bottosson.github.io/posts/colorpicker/), [Color picker](https://bottosson.github.io/misc/colorpicker/)
 
 An HSL/HSV-like, perceptually uniform colors, based on Oklab color space.
 
@@ -43,7 +47,7 @@ Args: `<angle>, <percentage|number(0..1)>, <percentage|number(0..1)>`
 
 `to-css()` outputs to `oklab()`
 
-* `hsluv`/`hpluv` - [Website](https://www.hsluv.org)
+* **hsluv**/**hpluv** - [Website](https://www.hsluv.org)
 
 An HSL-like, perceptually uniform color, based on CIE LUV
 
@@ -51,11 +55,11 @@ Args: `<angle>, <percentage>, <percentage>`
 
 `to-css()` outputs to `rgb()`
 
-* `okhsl-p3`/`okhsv-p3`
+* **okhsl-p3**/**okhsv-p3**
 
 **Experimental**: an okhsl/okhsv recalculated to use wider P3 gamut instead of sRGB.
 
-* `srgb`
+* **srgb**
 
 Standard RGB used in web development for decades
 
