@@ -6,7 +6,7 @@
 @include describe("color API") {
   @include it("creates a color") {
     @include assert-equal(
-      farba.create("hsluv", 216deg, 50%, 80%, 50%),
+      farba.create(hsluv 216deg 50% 80% 50%),
       (
         "color": "hsluv",
         "values": 216deg 50% 80%,
@@ -17,14 +17,14 @@
 
   @include it("default opacity is 100%") {
     @include assert-equal(
-      map-get(farba.create("hsluv", 216deg, 50%, 80%), "alpha"),
+      map-get(farba.create(hsluv 216deg 50% 80%), "alpha"),
       100%
     );
   }
 
   @include it("converts values") {
     @include assert-equal(
-      farba.create("hsluv", 0.6turn, 0.5, 0.8, 0.5),
+      farba.create(hsluv 0.6turn 0.5 0.8 0.5),
       (
         "color": "hsluv",
         "values": 216deg 50% 80%,
@@ -45,7 +45,7 @@
   }
 
   @include it("convert color to other color") {
-    $color: farba.create("okhsv-srgb", 150deg, 50%, 50%);
+    $color: farba.create(okhsv-srgb 150deg 50% 50%);
     $newColor: farba.to("hsluv", $color);
     $values: map-get($newColor, "values");
 
@@ -56,7 +56,7 @@
   }
 
   @include it("represent color as CSS Color 4 when available") {
-    $color: farba.create("okhsl-srgb", 320deg, 100%, 59%, 50%);
+    $color: farba.create(okhsl-srgb 320deg 100% 59% 50%);
 
     @include assert-equal(
       farba.to-css($color),
@@ -65,7 +65,7 @@
   }
 
   @include it("represent color as sRGB color when native function unavailable") {
-    $color: farba.create("hsluv", 0deg, 100%, 50%, 70%);
+    $color: farba.create(hsluv 0deg 100% 50% 70%);
 
     @include assert-equal(
       farba.to-css($color),

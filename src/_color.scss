@@ -12,7 +12,9 @@
 @use "args" as args;
 
 // Return the internal color representation
-@function create($name, $values...) {
+@function create($values) {
+  $name: nth($values, 1);
+  $values: args.shift($values);
   $definition: map-get(meta.module-variables($name), "DEFINITION");
 
   @return args.normalize($values, $definition);
@@ -21,7 +23,7 @@
 // Create farba color from builtin sass color
 // alias: from-srgb
 @function from($color) {
-  @return color("srgb", red($color), green($color), blue($color), alpha($color));
+  @return create("srgb" red($color) green($color) blue($color) alpha($color));
 }
 @function from-srgb($color) { @return from($color); }
 

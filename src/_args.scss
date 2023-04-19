@@ -81,6 +81,14 @@ $degMult: (
   @return $res * 1%;
 }
 
+@function shift($list) {
+  $newList: ();
+  @for $i from 2 through length($list) {
+    $newList: append($newList, nth($list, $i));
+  }
+  @return $newList;
+}
+
 @function to-unitless($v) {
   @return math.div($v, $v * 0 + 1);
 }
